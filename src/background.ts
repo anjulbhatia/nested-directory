@@ -1,9 +1,13 @@
 import { initCache, fullRefresh, verifyAndRefresh } from './lib/cache'
 import { getCachedCount } from './lib/cache'
+import { toggleStartupInCollection } from './lib/storage'
 
 const isFirefoxLike =
   import.meta.env.EXTENSION_PUBLIC_BROWSER === 'firefox' ||
   import.meta.env.EXTENSION_PUBLIC_BROWSER === 'gecko-based'
+
+const CONTEXT_MENU_ID = 'yc-dir-bookmark'
+const YC_COMPANY_RE = /ycombinator\.com\/companies\/([^/?]+)/
 
 if (isFirefoxLike) {
   browser.browserAction.onClicked.addListener(() => {
@@ -64,7 +68,34 @@ chrome.runtime.onInstalled.addListener(async () => {
       const count = await fullRefresh()
       console.log(`[YC Directory] Initial load: ${count} companies`)
     }
+
+    chrome.contextMenus.create({
+      id: CONTEXT_MENU_ID,
+      title: 'Bookmark Startup in YC Directory',
+      contexts: ['page', 'link'],
+      documentUrlPatterns: ['*://*.ycombinator.com/companies/*'],
+    })
   } catch (err) {
     console.error('[YC Directory] Initialization error:', err)
+  }
+})
+
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  if (info.menuItemId !== CONTEXT_MENU_ID) return
+
+  const url = info.pageUrl || tab?.url
+  if (!url) return
+
+  const match = url.match(YC_COMPANY_RE)
+  if (!match) return
+
+  const slug = match[1]
+  if (!slug) return
+
+  try {
+    await toggleStartupInCollection(slug, 'bookmarked')
+    console.log(`[YC Directory] Bookmarked startup: ${slug}`)
+  } catch (err) {
+    console.error('[YC Directory] Failed to bookmark:', err)
   }
 })
