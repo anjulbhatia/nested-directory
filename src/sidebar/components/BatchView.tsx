@@ -11,7 +11,7 @@ import { MultiSelect, ActiveFilters } from './MultiSelect'
 import { Input } from '../../components/ui/input'
 import { Button } from '../../components/ui/button'
 import {
-  Search, Loader2, ArrowUpDown, AlertTriangle, RefreshCw, SlidersHorizontal, X,
+  Search, Loader2, ArrowUpDown, AlertTriangle, RefreshCw, SlidersHorizontal, X, ChevronDown,
 } from 'lucide-react'
 
 const PAGE_SIZE = 100
@@ -33,6 +33,7 @@ export function BatchView() {
   const [isWide, setIsWide] = useState(false)
   const [showFilterDrawer, setShowFilterDrawer] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const checkWidth = () => {
@@ -117,14 +118,18 @@ export function BatchView() {
     setSelectedIndustries([])
     setSearchQuery('')
     setPage(0)
+    searchRef.current?.focus()
   }
 
   const hasFilters = selectedBatches.length > 0 || selectedIndustries.length > 0 || searchQuery.trim().length > 0
 
   const FilterPanel = (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="space-y-1.5">
-        <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Batch</h3>
+        <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+          <span className="w-1 h-3 rounded-full bg-yc-orange" />
+          Batch
+        </h3>
         <MultiSelect
           label="Batch"
           options={BATCHES}
@@ -133,7 +138,10 @@ export function BatchView() {
         />
       </div>
       <div className="space-y-1.5">
-        <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Industry</h3>
+        <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+          <span className="w-1 h-3 rounded-full bg-yc-orange" />
+          Industry
+        </h3>
         <MultiSelect
           label="Industry"
           options={industries}
@@ -141,25 +149,25 @@ export function BatchView() {
           onChange={(v) => { setSelectedIndustries(v); setPage(0) }}
         />
       </div>
-      <div className="pt-1.5 border-t space-y-1.5">
+      <div className="pt-3 border-t space-y-1.5">
         <Button
-          variant="outline"
+          variant={sortAlphabetical ? 'default' : 'outline'}
           size="sm"
-          className="w-full text-xs h-7 gap-1"
+          className="w-full text-xs h-8 gap-1.5"
           onClick={() => { setSortAlphabetical(!sortAlphabetical); setPage(0) }}
         >
           <ArrowUpDown className="h-3 w-3" />
-          {sortAlphabetical ? 'Batch Order' : 'A–Z'}
+          {sortAlphabetical ? 'Sorted A–Z' : 'Sort A–Z'}
         </Button>
         <Button
           variant="outline"
           size="sm"
-          className="w-full text-xs h-7 gap-1"
+          className="w-full text-xs h-8 gap-1.5"
           onClick={handleRefresh}
           disabled={refreshing}
         >
           {refreshing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-          Refresh
+          Refresh Data
         </Button>
       </div>
     </div>
@@ -167,24 +175,31 @@ export function BatchView() {
 
   if (loading) {
     return (
-      <div ref={containerRef} className="flex items-center justify-center py-16 text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading...
+      <div ref={containerRef} className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
+        <div className="relative">
+          <Loader2 className="h-8 w-8 animate-spin text-yc-orange" />
+          <div className="absolute inset-0 h-8 w-8 rounded-full border-2 border-yc-orange/20 animate-ping" />
+        </div>
+        <p className="text-sm font-medium">Loading companies...</p>
+        <p className="text-xs text-muted-foreground/60">Fetching YC startup data</p>
       </div>
     )
   }
 
   if (initError) {
     return (
-      <div ref={containerRef} className="text-center py-12 space-y-3">
-        <AlertTriangle className="h-8 w-8 mx-auto text-destructive" />
-        <p className="text-sm text-muted-foreground">Failed to load</p>
-        <p className="text-xs text-destructive">{initError}</p>
-        <div className="flex gap-2 justify-center">
-          <Button size="sm" variant="outline" className="text-xs" onClick={() => window.location.reload()}>
+      <div ref={containerRef} className="flex flex-col items-center justify-center py-16 px-6 text-center">
+        <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-3">
+          <AlertTriangle className="h-6 w-6 text-destructive" />
+        </div>
+        <p className="text-sm font-medium mb-1">Failed to load</p>
+        <p className="text-xs text-muted-foreground mb-4 max-w-xs">{initError}</p>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" className="text-xs h-8" onClick={() => window.location.reload()}>
             Retry
           </Button>
-          <Button size="sm" className="text-xs" onClick={handleRefresh}>
-            <RefreshCw className="h-3 w-3 mr-1" /> Refresh
+          <Button size="sm" className="text-xs h-8 gap-1.5" onClick={handleRefresh}>
+            <RefreshCw className="h-3 w-3" /> Refresh
           </Button>
         </div>
       </div>
@@ -192,19 +207,21 @@ export function BatchView() {
   }
 
   return (
-    <div ref={containerRef} className="flex gap-3 h-full min-h-0">
+    <div ref={containerRef} className="flex gap-0 h-full min-h-0">
       {isWide ? (
-        <div className="w-48 shrink-0 overflow-y-auto">
+        <div className="w-52 shrink-0 overflow-y-auto border-r p-3 bg-muted/20">
           {FilterPanel}
         </div>
       ) : (
         showFilterDrawer && (
-          <div className="fixed inset-0 z-50 flex">
-            <div className="absolute inset-0 bg-black/40" onClick={() => setShowFilterDrawer(false)} />
-            <div className="relative w-64 bg-background border-r p-3 overflow-y-auto shadow-xl">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold">Filters</span>
-                <button onClick={() => setShowFilterDrawer(false)} className="text-muted-foreground hover:text-foreground">
+          <div className="fixed inset-0 z-50 flex transition-opacity">
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowFilterDrawer(false)} />
+            <div className="relative w-64 bg-background border-r p-4 overflow-y-auto shadow-2xl animate-in slide-in-from-left">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-semibold flex items-center gap-1.5">
+                  <SlidersHorizontal className="h-4 w-4 text-yc-orange" /> Filters
+                </span>
+                <button onClick={() => setShowFilterDrawer(false)} className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -214,57 +231,89 @@ export function BatchView() {
         )
       )}
 
-      <div className="flex-1 min-w-0 space-y-2">
-        <div className="flex items-center gap-2">
-          {!isWide && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 shrink-0"
-              onClick={() => setShowFilterDrawer(true)}
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-            </Button>
-          )}
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Search name, one-liner, tags..."
-              value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setPage(0) }}
-              className="pl-8 h-8 text-xs"
-            />
-          </div>
-        </div>
-
-        <ActiveFilters
-          selected={selectedBatches}
-          onChange={(v) => { setSelectedBatches(v); setPage(0) }}
-        />
-        <ActiveFilters
-          selected={selectedIndustries}
-          onChange={(v) => { setSelectedIndustries(v); setPage(0) }}
-        />
-
-        <div className="flex items-center justify-between min-h-[18px]">
-          <p className="text-[11px] text-muted-foreground">
-            {visibleData.length === 0
-              ? hasFilters ? 'No results' : `${totalCount} companies`
-              : searchQuery
-                ? `${visibleData.length} result${visibleData.length > 1 ? 's' : ''}`
-                : `${visibleData.length} of ${totalCount}`}
-          </p>
+      <div className="flex-1 min-w-0 flex flex-col min-h-0">
+        <div className="p-3 pb-0 space-y-2">
           <div className="flex items-center gap-2">
-            {sortAlphabetical && <span className="text-[10px] text-muted-foreground">Sorted A–Z</span>}
-            {hasFilters && (
-              <button className="text-[10px] text-primary hover:underline" onClick={handleClearFilters}>
-                Clear filters
-              </button>
+            {!isWide && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`h-8 w-8 shrink-0 transition-colors ${hasFilters ? 'text-yc-orange' : ''}`}
+                onClick={() => setShowFilterDrawer(true)}
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+              </Button>
             )}
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                ref={searchRef}
+                placeholder="Search name, one-liner, tags..."
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setPage(0) }}
+                className="pl-8 pr-8 h-9 text-sm bg-muted/50 focus-visible:bg-background transition-colors"
+              />
+              {searchQuery && (
+                <button
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => { setSearchQuery(''); setPage(0); searchRef.current?.focus() }}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <ActiveFilters
+            selected={selectedBatches}
+            onChange={(v) => { setSelectedBatches(v); setPage(0) }}
+          />
+          <ActiveFilters
+            selected={selectedIndustries}
+            onChange={(v) => { setSelectedIndustries(v); setPage(0) }}
+          />
+        </div>
+
+        <div className="p-3 pb-0">
+          <div className="flex items-center justify-between min-h-[20px]">
+            <p className="text-xs text-muted-foreground">
+              {visibleData.length === 0
+                ? hasFilters ? 'No results' : `${totalCount} companies`
+                : searchQuery
+                  ? `${visibleData.length} result${visibleData.length > 1 ? 's' : ''}`
+                  : `${visibleData.length} of ${totalCount} companies`}
+            </p>
+            <div className="flex items-center gap-2">
+              {sortAlphabetical && (
+                <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                  <ArrowUpDown className="h-3 w-3" /> A–Z
+                </span>
+              )}
+              {hasFilters && (
+                <button className="text-[10px] text-primary hover:underline font-medium" onClick={handleClearFilters}>
+                  Clear all
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-0">
+          {paginated.length === 0 && !loading && (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <Search className="h-8 w-8 text-muted-foreground/30 mb-3" />
+              <p className="text-sm font-medium text-muted-foreground mb-1">No companies found</p>
+              <p className="text-xs text-muted-foreground/60 max-w-[200px]">
+                {hasFilters ? 'Try adjusting your filters or search query' : 'Data may still be loading'}
+              </p>
+              {hasFilters && (
+                <Button variant="link" size="sm" className="text-xs mt-2" onClick={handleClearFilters}>
+                  Clear filters
+                </Button>
+              )}
+            </div>
+          )}
+
           {paginated.map((s) => (
             <StartupCard
               key={s.slug}
@@ -275,27 +324,22 @@ export function BatchView() {
               }}
             />
           ))}
+
+          {hasMore && (
+            <div className="pt-1 pb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full text-xs h-9 gap-1.5"
+                onClick={() => setPage((p) => p + 1)}
+              >
+                <ChevronDown className="h-3 w-3" />
+                Show {Math.min(PAGE_SIZE, visibleData.length - paginated.length)} more
+                <span className="text-muted-foreground">({visibleData.length - paginated.length} remaining)</span>
+              </Button>
+            </div>
+          )}
         </div>
-
-        {visibleData.length > 0 && paginated.length === 0 && (
-          <div className="text-center py-8 text-xs text-muted-foreground">
-            No matches with current filters
-          </div>
-        )}
-
-        {hasMore && (
-          <div className="text-center py-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs h-8"
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Show {Math.min(PAGE_SIZE, visibleData.length - paginated.length)} more
-              ({visibleData.length - paginated.length} remaining)
-            </Button>
-          </div>
-        )}
       </div>
 
       <StartupDetail

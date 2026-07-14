@@ -1,7 +1,7 @@
 import { observeCompanyCards, findAllCompanyCards, type YcCompanyData } from './yc-companies'
 import '../globals.css'
 
-console.log('[YC Directory] Content script loaded')
+const YC_LOGO_SVG = '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="8" fill="#ff6600"/><path d="M14 12h6l4 8 4-8h6L26 26v10h-4V26L14 12Z" fill="#fff"/></svg>'
 
 async function getTrackedSlugs(): Promise<Set<string>> {
   const { notes, collections } = await chrome.storage.local.get(['notes', 'collections'])
@@ -32,23 +32,13 @@ function injectIndicators(trackedSlugs: Set<string>) {
     const anchor = document.querySelector(`a[href="/companies/${card.slug}"]`)
     if (!anchor) continue
 
-    const existing = anchor.querySelector('.yc-dir-indicator')
+    const existing = anchor.querySelector('.yc-dir-indicator, .yc-dir-indicator-dot')
     if (existing) continue
 
-    const badge = document.createElement('span')
-    badge.className = 'yc-dir-indicator'
-    badge.title = 'Tracked in YC Directory'
-    badge.style.cssText =
-      'position:absolute;top:4px;right:4px;width:10px;height:10px;' +
-      'border-radius:50%;background:#ff6600;border:2px solid white;' +
-      'box-shadow:0 1px 3px rgba(0,0,0,0.3);z-index:10;'
-
-    const pos = getComputedStyle(anchor).position
-    if (pos === 'static') {
-      (anchor as HTMLElement).style.position = 'relative'
-    }
-
-    anchor.appendChild(badge)
+    const dot = document.createElement('span')
+    dot.className = 'yc-dir-indicator-dot'
+    dot.title = 'Tracked in YC Directory'
+    anchor.appendChild(dot)
   }
 }
 
@@ -66,12 +56,13 @@ export default function initial() {
   fetchCSS().then((response) => { styleElement.textContent = response })
 
   const container = document.createElement('div')
-  container.className = 'content_script'
+  container.className = 'yc-dir-root'
 
   const pill = document.createElement('button')
   pill.type = 'button'
-  pill.className = 'content_pill'
-  pill.setAttribute('aria-label', 'Open sidebar')
+  pill.className = 'yc-dir-pill'
+  pill.setAttribute('aria-label', 'Open YC Directory sidebar')
+  pill.innerHTML = `${YC_LOGO_SVG} YC Directory`
   pill.addEventListener('click', () => {
     try {
       const isFirefox =
@@ -87,7 +78,6 @@ export default function initial() {
     }
   })
 
-  pill.textContent = 'Open YC Directory'
   container.appendChild(pill)
   shadowRoot.appendChild(container)
 
