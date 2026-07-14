@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json.schemastore.org/chrome-manifest.json",
+  "chromium:manifest_version": 3,
+  "firefox:manifest_version": 2,
+  "version": "1.0.0",
+  "name": "YC Directory",
+  "description": "Annotate and organise startups while browsing the YC Directory.",
+  "icons": {
+    "16": "images/icon.png",
+    "32": "images/icon.png",
+    "48": "images/icon.png",
+    "64": "images/icon.png",
+    "128": "images/icon.png"
+  },
+  "chromium:action": {
+    "default_popup": "popup/index.html",
+    "default_icon": {
+      "16": "images/icon.png",
+      "32": "images/icon.png",
+      "48": "images/icon.png",
+      "64": "images/icon.png",
+      "128": "images/icon.png"
+    },
+    "default_title": "YC Directory"
+  },
+  "firefox:browser_action": {
+    "default_popup": "popup/index.html",
+    "default_icon": {
+      "16": "images/icon.png",
+      "32": "images/icon.png",
+      "48": "images/icon.png",
+      "64": "images/icon.png",
+      "128": "images/icon.png"
+    },
+    "default_title": "YC Directory"
+  },
+  "chromium:side_panel": {
+    "default_path": "sidebar/index.html",
+    "default_title": "YC Directory"
+  },
+  "firefox:sidebar_action": {
+    "default_panel": "sidebar/index.html",
+    "default_title": "YC Directory"
+  },
+  "chromium:permissions": [
+    "sidePanel",
+    "storage",
+    "unlimitedStorage",
+    "activeTab"
+  ],
+  "chromium:host_permissions": [
+    "https://yc-oss.github.io/*",
+    "https://www.ycombinator.com/*"
+  ],
+  "background": {
+    "chromium:service_worker": "background.ts",
+    "firefox:scripts": [
+      "background.ts"
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.ycombinator.com/companies*"
+      ],
+      "js": [
+        "content/scripts.ts"
+      ]
+    }
+  ],
+  "author": "Your Name"
+}
